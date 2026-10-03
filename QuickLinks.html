@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOps Environment Bookmark Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              dev: '#10b981',    /* Emerald */
+              qa: '#06b6d4',     /* Cyan */
+              stage: '#f59e0b',  /* Amber */
+              prod: '#ef4444',   /* Rose */
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-hover {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Top Global Header -->
+  <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 flex-shrink-0 flex items-center justify-center">
+            <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-cyan-400">
+              <i class="fa-solid fa-layer-group text-lg"></i>
+            </div>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white truncate">DevOps Hub</h1>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                Multi-Environment
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 truncate">Catalog of Internal Tools & Infrastructure</p>
+          </div>
+        </div>
+
+        <!-- Global Action Buttons -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <button id="browser-import-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-slate-900 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition shadow-sm" title="Import from Chrome, Edge, Firefox, Safari">
+            <i class="fa-solid fa-file-import text-cyan-400"></i>
+            <span class="hidden md:inline">Import Bookmarks HTML</span>
+            <span class="md:hidden">Import HTML</span>
+          </button>
+
+          <button id="backup-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-slate-900 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition shadow-sm" title="Export or Import JSON data">
+            <i class="fa-solid fa-arrow-right-arrow-left text-indigo-400"></i>
+            <span class="hidden sm:inline">JSON Sync</span>
+          </button>
+
+          <button id="add-link-btn" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 shadow-md shadow-cyan-600/25 transition">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Add Bookmark</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Subheader Toolbar: Search, Environment Filters, Categories -->
+  <section class="bg-slate-900/50 border-b border-slate-800/60 sticky top-16 z-30 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+      
+      <!-- Primary Row: Search & Environment Tabs -->
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        
+        <!-- Live Search Field -->
+        <div class="relative flex-1 max-w-xl">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </div>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search applications (e.g. Jenkins, Azure, Datadog, CI/CD)..."
+            class="w-full pl-9 pr-9 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 transition font-sans"
+          >
+          <button id="clear-search-btn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+            <i class="fa-solid fa-circle-xmark text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Environment Tabs -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+          <button data-env="ALL" class="env-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-slate-800 text-white border border-slate-700 shadow-sm">
+            <span>ALL</span>
+            <span id="count-all" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-slate-300">0</span>
+          </button>
+
+          <button data-env="DEV" class="env-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>DEV</span>
+            <span id="count-dev" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-emerald-400">0</span>
+          </button>
+
+          <button data-env="QA" class="env-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>QA</span>
+            <span id="count-qa" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-cyan-400">0</span>
+          </button>
+
+          <button data-env="STAGE" class="env-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>STAGE</span>
+            <span id="count-stage" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-amber-400">0</span>
+          </button>
+
+          <button data-env="PROD" class="env-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>PROD</span>
+            <span id="count-prod" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-rose-400">0</span>
+          </button>
+
+          <!-- View Layout Mode Toggle -->
+          <div class="h-6 w-px bg-slate-800 mx-1 hidden sm:block"></div>
+          <button id="view-mode-toggle" class="px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition" title="Toggle Grouped / Flat Grid View">
+            <i id="view-mode-icon" class="fa-solid fa-table-cells-large text-slate-300"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Secondary Row: Category Chips Filter -->
+      <div id="category-chips-bar" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+        <span class="text-[11px] font-medium text-slate-500 uppercase tracking-wider mr-1 flex items-center gap-1 flex-shrink-0">
+          <i class="fa-solid fa-tags text-[10px]"></i> Tags:
+        </span>
+        <div id="chips-container" class="flex items-center gap-1.5 flex-nowrap">
+          <!-- Dynamic category chips will be injected here -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Main Content Space -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Active Status Summary Banner -->
+    <div id="status-bar" class="mb-5 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+      <div class="flex items-center gap-2">
+        <span id="showing-results-text" class="text-slate-300 font-medium">Showing all bookmarks</span>
+        <span id="active-filter-badge" class="hidden px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[11px]"></span>
+      </div>
+      <div class="text-[11px] text-slate-500">
+        Tip: Press <kbd class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono text-[10px]">/</kbd> to search anytime
+      </div>
+    </div>
+
+    <!-- Bookmarks Container (Grouped or Flat) -->
+    <div id="links-container" class="space-y-8">
+      <!-- Cards rendered here by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden py-16 text-center border border-dashed border-slate-800/80 rounded-2xl bg-slate-900/20 max-w-2xl mx-auto my-8 p-6">
+      <!-- Injected dynamically by renderAll() -->
+    </div>
+
+  </main>
+
+  <!-- Create / Edit Bookmark Modal -->
+  <div id="bookmark-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in duration-150">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <i id="modal-title-icon" class="fa-solid fa-plus text-xs"></i>
+          </div>
+          <h3 id="modal-title" class="font-semibold text-white text-sm sm:text-base">Add New Application Bookmark</h3>
+        </div>
+        <button id="close-modal-btn" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form id="bookmark-form" class="p-6 space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="edit-id" value="">
+
+        <!-- App Name & Environment -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-medium text-slate-300 mb-1.5" for="form-title">Application Name *</label>
+            <input 
+              type="text" 
+              id="form-title" 
+              required 
+              placeholder="e.g. Jenkins Master, Azure DevOps..."
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500"
+            >
+          </div>
+          <div>
+            <label class="block font-medium text-slate-300 mb-1.5" for="form-env">Environment *</label>
+            <select 
+              id="form-env" 
+              required
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500"
+            >
+              <option value="DEV">DEV</option>
+              <option value="QA">QA</option>
+              <option value="STAGE">STAGE</option>
+              <option value="PROD">PROD</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- URL Field -->
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5" for="form-url">URL / Endpoint *</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+              <i class="fa-solid fa-link text-xs"></i>
+            </div>
+            <input 
+              type="url" 
+              id="form-url" 
+              required 
+              placeholder="https://jenkins.internal.dev.corp/..."
+              class="w-full pl-8 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 font-mono text-xs"
+            >
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5" for="form-desc">Description</label>
+          <textarea 
+            id="form-desc" 
+            rows="2" 
+            placeholder="Key credentials notes, build cluster node, or service details..."
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Category & Icon Picker Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-300 mb-1.5" for="form-category">Category / Tag</label>
+            <input 
+              type="text" 
+              id="form-category" 
+              placeholder="CI/CD, Monitoring, Cloud, Repo..."
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500"
+            >
+          </div>
+          <div>
+            <label class="block font-medium text-slate-300 mb-1.5" for="form-icon">Brand Icon</label>
+            <select 
+              id="form-icon"
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 font-sans"
+            >
+              <option value="fa-solid fa-server">Server / Infrastructure</option>
+              <option value="fa-brands fa-microsoft">Azure / Azure DevOps</option>
+              <option value="fa-brands fa-jenkins">Jenkins</option>
+              <option value="fa-solid fa-chart-line">New Relic / Metrics</option>
+              <option value="fa-brands fa-aws">AWS Console</option>
+              <option value="fa-brands fa-docker">Docker / Containers</option>
+              <option value="fa-solid fa-dharmachakra">Kubernetes / ArgoCD</option>
+              <option value="fa-brands fa-github">GitHub / GitLab</option>
+              <option value="fa-brands fa-jira">Jira / Confluence</option>
+              <option value="fa-solid fa-database">Database / Redis</option>
+              <option value="fa-solid fa-shield-halved">Vault / Security</option>
+              <option value="fa-solid fa-code">API / Swagger</option>
+              <option value="fa-solid fa-terminal">CLI / Terminal</option>
+              <option value="fa-solid fa-globe">Generic Web Link</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/80">
+          <button type="button" id="cancel-form-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-semibold shadow-md shadow-cyan-600/30 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-check text-xs"></i>
+            <span id="save-btn-text">Save Bookmark</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Browser Bookmarks HTML Import Modal -->
+  <div id="browser-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+      
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-file-import text-xs"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white text-sm sm:text-base">Import Browser Bookmarks HTML</h3>
+            <p class="text-[11px] text-slate-400">Chrome, Edge, Firefox, Safari, Brave exported HTML file</p>
+          </div>
+        </div>
+        <button id="close-browser-modal-btn" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs sm:text-sm">
+        
+        <!-- File Upload Dropzone -->
+        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-2xl p-6 text-center transition cursor-pointer bg-slate-950/40">
+          <input type="file" id="browser-file-input" accept=".html,.htm" class="hidden">
+          <div class="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-400 mx-auto flex items-center justify-center text-xl mb-3">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <p class="font-medium text-slate-200 mb-1">Click to select or drag & drop your bookmarks file</p>
+          <p class="text-[11px] text-slate-500">Standard Netscape Bookmarks HTML (Exported via Browser Bookmark Manager)</p>
+          <div id="file-chosen-name" class="hidden mt-3 inline-block px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-300 font-mono text-xs"></div>
+        </div>
+
+        <!-- Detection & Options -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div>
+            <label class="block text-slate-300 font-medium mb-1" for="import-default-env">Default Fallback Environment</label>
+            <select id="import-default-env" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs">
+              <option value="DEV">DEV (Default if unspecified)</option>
+              <option value="QA">QA</option>
+              <option value="STAGE">STAGE</option>
+              <option value="PROD">PROD</option>
+            </select>
+            <span class="text-[10px] text-slate-500 mt-1 block">Used when link URLs/titles don't have env keywords</span>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1" for="import-merge-mode">Import Strategy</label>
+            <select id="import-merge-mode" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs">
+              <option value="append">Append (Keep existing bookmarks)</option>
+              <option value="replace">Replace All (Clean slate with imported)</option>
+            </select>
+            <span class="text-[10px] text-slate-500 mt-1 block">Avoids duplicates automatically</span>
+          </div>
+        </div>
+
+        <!-- Preview Counts Box (Dynamic) -->
+        <div id="import-preview-box" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
+          <div class="flex items-center justify-between font-semibold text-slate-300">
+            <span>Found in bookmarks file:</span>
+            <span id="import-total-count" class="text-cyan-400 font-mono">0 links</span>
+          </div>
+          <div class="grid grid-cols-4 gap-2 text-center text-[11px] pt-1">
+            <div class="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold">DEV: <span id="parse-count-dev">0</span></div>
+            <div class="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-semibold">QA: <span id="parse-count-qa">0</span></div>
+            <div class="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 font-semibold">STAGE: <span id="parse-count-stage">0</span></div>
+            <div class="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 font-semibold">PROD: <span id="parse-count-prod">0</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Import Modal Actions -->
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-900/90">
+        <button id="cancel-browser-modal-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+          Cancel
+        </button>
+        <button id="confirm-browser-import-btn" disabled class="disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-cyan-600/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-circle-check text-xs"></i>
+          <span>Import Bookmarks</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JSON Backup / Sync Modal -->
+  <div id="backup-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+      
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-arrow-right-arrow-left text-indigo-400"></i>
+          <h3 class="font-semibold text-white text-sm sm:text-base">JSON Backup & Migration</h3>
+        </div>
+        <button id="close-backup-modal-btn" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs sm:text-sm">
+        <p class="text-slate-400 text-xs">
+          Export your current environment catalog to share with colleagues or paste a JSON array below to restore bookmarks.
+        </p>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1" for="json-payload-area">Catalog JSON Payload</label>
+          <textarea 
+            id="json-payload-area" 
+            rows="6" 
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500"
+            placeholder="Paste exported JSON here..."
+          ></textarea>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button id="download-json-btn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+            <i class="fa-solid fa-download text-xs text-indigo-400"></i> Download .json File
+          </button>
+          <button id="copy-json-btn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+            <i class="fa-solid fa-copy text-xs text-cyan-400"></i> Copy to Clipboard
+          </button>
+          <button id="import-json-btn" class="ml-auto px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-upload text-xs"></i> Apply JSON
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Delete Single Bookmark Confirmation Modal -->
+  <div id="delete-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 mx-auto flex items-center justify-center text-xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h4 class="font-bold text-white text-base">Remove Bookmark?</h4>
+        <p id="delete-app-name" class="text-xs text-slate-400 mt-1 font-mono text-cyan-400 break-all"></p>
+        <p class="text-xs text-slate-500 mt-1">This will remove the application from your environment portal.</p>
+      </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button id="cancel-delete-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+          Cancel
+        </button>
+        <button id="confirm-delete-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-rose-600/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can text-xs"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Fresh (Clear All) Modal -->
+  <div id="clear-all-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 mx-auto flex items-center justify-center text-xl">
+        <i class="fa-solid fa-broom"></i>
+      </div>
+      <div>
+        <h4 class="font-bold text-white text-base">Start Fresh (Clear All Bookmarks)?</h4>
+        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+          This will wipe all application links in your catalog so you can start from an empty workspace. You can restore demo tools or import your own browser bookmarks anytime.
+        </p>
+      </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button id="cancel-clear-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+          Cancel
+        </button>
+        <button id="confirm-clear-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-rose-600/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can text-xs"></i> Clear Everything
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-900 bg-slate-950 py-5 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <span>DevOps Environments Catalog</span>
+        <span>•</span>
+        <button id="reset-defaults-btn" class="hover:text-slate-300 underline underline-offset-2 transition">
+          Reset to Demo Tools
+        </button>
+        <span>•</span>
+        <button id="start-fresh-btn" class="text-rose-400/90 hover:text-rose-300 underline underline-offset-2 flex items-center gap-1 transition">
+          <i class="fa-solid fa-broom text-[10px]"></i> Start Fresh (Clear All)
+        </button>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+          <i class="fa-solid fa-shield-halved text-emerald-400 text-[10px]"></i> Local Client Encapsulation
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Box -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Main JavaScript Logic -->
+  <script>
+    const STORAGE_KEY = 'devops_portal_bookmarks_v2';
+    
+    // Default seed tools for quick demonstration
+    const DEFAULT_APPS = [
+      {
+        id: 'seed-1',
+        title: 'Azure DevOps Boards & Pipelines',
+        url: 'https://dev.azure.com/organization/devops-core',
+        env: 'PROD',
+        category: 'CI/CD',
+        icon: 'fa-brands fa-microsoft',
+        description: 'Primary production release pipelines, sprint planning, and artifact feed repositories.'
+      },
+      {
+        id: 'seed-2',
+        title: 'Jenkins CI Build Master',
+        url: 'https://jenkins-ci.internal.corp/job/nightly-regression',
+        env: 'STAGE',
+        category: 'CI/CD',
+        icon: 'fa-brands fa-jenkins',
+        description: 'Staging environment automated smoke tests, container builds, and test runner triggers.'
+      },
+      {
+        id: 'seed-3',
+        title: 'New Relic APM Dashboard',
+        url: 'https://one.newrelic.com/dashboards/infrastructure-health',
+        env: 'PROD',
+        category: 'Monitoring',
+        icon: 'fa-solid fa-chart-line',
+        description: 'Real-time production service latency, error traces, and Kubernetes pod memory usage.'
+      },
+      {
+        id: 'seed-4',
+        title: 'ArgoCD GitOps Console',
+        url: 'https://argocd.qa.k8s.internal/',
+        env: 'QA',
+        category: 'Kubernetes',
+        icon: 'fa-solid fa-dharmachakra',
+        description: 'Declarative cluster sync status and service mesh deployments for test clusters.'
+      },
+      {
+        id: 'seed-5',
+        title: 'AWS Management Console',
+        url: 'https://signin.aws.amazon.com/console?region=us-east-1',
+        env: 'DEV',
+        category: 'Cloud',
+        icon: 'fa-brands fa-aws',
+        description: 'Developer sandbox VPC, DynamoDB local clusters, and ECS test worker nodes.'
+      },
+      {
+        id: 'seed-6',
+        title: 'Swagger / OpenAPI Specs Hub',
+        url: 'https://api-gateway.dev.internal/swagger/ui',
+        env: 'DEV',
+        category: 'API',
+        icon: 'fa-solid fa-code',
+        description: 'Microservice interactive mock endpoints and contract schema documentation.'
+      },
+      {
+        id: 'seed-7',
+        title: 'Datadog Log Stream & Synthetics',
+        url: 'https://app.datadoghq.com/logs?query=env:qa',
+        env: 'QA',
+        category: 'Logs',
+        icon: 'fa-solid fa-chart-line',
+        description: 'Centralized QA log aggregation, trace correlations, and automated UI synthetics.'
+      },
+      {
+        id: 'seed-8',
+        title: 'HashiCorp Vault Secrets Manager',
+        url: 'https://vault.stage.internal:8200/ui/',
+        env: 'STAGE',
+        category: 'Security',
+        icon: 'fa-solid fa-shield-halved',
+        description: 'Staging certificate authority, rotating database credentials, and IAM tokens.'
+      }
+    ];
+
+    // State Variables
+    let applications = [];
+    let activeEnv = 'ALL';
+    let selectedCategory = null;
+    let searchQuery = '';
+    let isGroupedView = true;
+    let deletingAppId = null;
+    let parsedBookmarksCache = [];
+
+    function loadData() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          applications = JSON.parse(stored);
+        } else {
+          applications = JSON.parse(JSON.stringify(DEFAULT_APPS));
+          saveData();
+        }
+      } catch (e) {
+        console.warn('LocalStorage unavailable or disabled, using in-memory state');
+        if (!applications || applications.length === 0) {
+          applications = JSON.parse(JSON.stringify(DEFAULT_APPS));
+        }
+      }
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
+    }
+
+    function showToast(message, iconClass = 'fa-solid fa-circle-check', isError = false) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-xs shadow-2xl backdrop-blur-md transition-all duration-300 pointer-events-auto transform translate-y-3 opacity-0 ${
+        isError 
+          ? 'bg-rose-950/90 border-rose-800 text-rose-200' 
+          : 'bg-slate-900/95 border-slate-700 text-slate-100'
+      }`;
+      toast.innerHTML = `
+        <i class="${iconClass} ${isError ? 'text-rose-400' : 'text-cyan-400'}"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // Safe clipboard copy function using document.execCommand
+    function copyToClipboard(text, label = 'URL') {
+      const input = document.createElement('textarea');
+      input.value = text;
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      let successful = false;
+      try {
+        successful = document.execCommand('copy');
+      } catch (err) {
+        successful = false;
+      }
+      document.body.removeChild(input);
+      
+      if (successful) {
+        showToast(`${label} copied to clipboard!`, 'fa-solid fa-copy');
+      } else {
+        showToast(`Could not copy automatically.`, 'fa-solid fa-triangle-exclamation', true);
+      }
+    }
+
+    function getFilteredApps() {
+      return applications.filter(app => {
+        const matchesEnv = (activeEnv === 'ALL' || app.env === activeEnv);
+        const matchesCategory = !selectedCategory || (app.category && app.category.toLowerCase() === selectedCategory.toLowerCase());
+        
+        if (!searchQuery) {
+          return matchesEnv && matchesCategory;
+        }
+
+        const q = searchQuery.toLowerCase();
+        const inTitle = (app.title || '').toLowerCase().includes(q);
+        const inUrl = (app.url || '').toLowerCase().includes(q);
+        const inDesc = (app.description || '').toLowerCase().includes(q);
+        const inCat = (app.category || '').toLowerCase().includes(q);
+        const inEnv = (app.env || '').toLowerCase().includes(q);
+
+        return matchesEnv && matchesCategory && (inTitle || inUrl || inDesc || inCat || inEnv);
+      });
+    }
+
+    function updateCounts() {
+      const counts = { ALL: applications.length, DEV: 0, QA: 0, STAGE: 0, PROD: 0 };
+      applications.forEach(a => {
+        if (counts[a.env] !== undefined) counts[a.env]++;
+      });
+
+      document.getElementById('count-all').textContent = counts.ALL;
+      document.getElementById('count-dev').textContent = counts.DEV;
+      document.getElementById('count-qa').textContent = counts.QA;
+      document.getElementById('count-stage').textContent = counts.STAGE;
+      document.getElementById('count-prod').textContent = counts.PROD;
+    }
+
+    function renderCategoryChips() {
+      const chipsContainer = document.getElementById('chips-container');
+      const categoriesMap = new Map();
+      
+      applications.forEach(app => {
+        if (app.category && app.category.trim()) {
+          const cat = app.category.trim();
+          categoriesMap.set(cat, (categoriesMap.get(cat) || 0) + 1);
+        }
+      });
+
+      chipsContainer.innerHTML = '';
+      
+      // "All" chip
+      const allChip = document.createElement('button');
+      allChip.className = `px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
+        !selectedCategory 
+          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+          : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
+      }`;
+      allChip.textContent = 'All Tags';
+      allChip.onclick = () => {
+        selectedCategory = null;
+        renderCategoryChips();
+        renderAll();
+      };
+      chipsContainer.appendChild(allChip);
+
+      Array.from(categoriesMap.entries()).sort((a, b) => b[1] - a[1]).forEach(([category, count]) => {
+        const chip = document.createElement('button');
+        const isActive = selectedCategory && selectedCategory.toLowerCase() === category.toLowerCase();
+        chip.className = `px-2 py-1 rounded-md text-[11px] font-medium transition flex items-center gap-1.5 whitespace-nowrap ${
+          isActive 
+            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800'
+        }`;
+        chip.innerHTML = `<span>${escapeHtml(category)}</span><span class="text-[10px] opacity-60">(${count})</span>`;
+        chip.onclick = () => {
+          selectedCategory = isActive ? null : category;
+          renderCategoryChips();
+          renderAll();
+        };
+        chipsContainer.appendChild(chip);
+      });
+    }
+
+    function getEnvTheme(env) {
+      switch (env) {
+        case 'DEV':
+          return {
+            badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+            dot: 'bg-emerald-400',
+            borderHover: 'hover:border-emerald-500/40',
+            accent: 'text-emerald-400'
+          };
+        case 'QA':
+          return {
+            badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+            dot: 'bg-cyan-400',
+            borderHover: 'hover:border-cyan-500/40',
+            accent: 'text-cyan-400'
+          };
+        case 'STAGE':
+          return {
+            badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+            dot: 'bg-amber-400',
+            borderHover: 'hover:border-amber-500/40',
+            accent: 'text-amber-400'
+          };
+        case 'PROD':
+          return {
+            badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+            dot: 'bg-rose-500',
+            borderHover: 'hover:border-rose-500/40',
+            accent: 'text-rose-400'
+          };
+        default:
+          return {
+            badge: 'bg-slate-800 text-slate-300 border-slate-700',
+            dot: 'bg-slate-400',
+            borderHover: 'hover:border-slate-600',
+            accent: 'text-slate-400'
+          };
+      }
+    }
+
+    function createBookmarkCard(app) {
+      const theme = getEnvTheme(app.env);
+      const icon = app.icon || 'fa-solid fa-server';
+
+      const card = document.createElement('div');
+      card.className = `group bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between card-hover ${theme.borderHover} transition-all relative overflow-hidden`;
+      
+      card.innerHTML = `
+        <!-- Top row: Icon, Title, and Action Controls -->
+        <div class="space-y-2.5">
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center flex-shrink-0 text-slate-300 group-hover:${theme.accent} transition">
+                <i class="${escapeHtml(icon)} text-sm"></i>
+              </div>
+              <div class="min-w-0">
+                <h4 class="font-semibold text-slate-100 text-xs sm:text-sm truncate group-hover:text-white transition" title="${escapeHtml(app.title)}">
+                  ${escapeHtml(app.title)}
+                </h4>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${theme.badge}">
+                    <span class="w-1.5 h-1.5 rounded-full ${theme.dot}"></span>
+                    ${app.env}
+                  </span>
+                  ${app.category ? `
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800/80 truncate max-w-[120px]">
+                      ${escapeHtml(app.category)}
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Quick Utility Buttons -->
+            <div class="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+              <button onclick="editApp('${app.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 flex items-center justify-center transition text-xs" title="Edit Bookmark">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button onclick="requestDeleteApp('${app.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 flex items-center justify-center transition text-xs" title="Delete">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- URL / Domain snippet -->
+          <div class="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 bg-slate-950/70 px-2.5 py-1.5 rounded-lg border border-slate-800/80 truncate">
+            <i class="fa-solid fa-link text-[10px] text-slate-500 flex-shrink-0"></i>
+            <span class="truncate flex-1 select-all" title="${escapeHtml(app.url)}">${escapeHtml(app.url)}</span>
+            <button onclick="copyToClipboard('${escapeJsString(app.url)}')" class="text-slate-500 hover:text-cyan-400 transition ml-1" title="Copy URL">
+              <i class="fa-solid fa-copy text-[10px]"></i>
+            </button>
+          </div>
+
+          <!-- Description -->
+          <p class="text-[11px] text-slate-400 leading-relaxed line-clamp-2 min-h-[32px]">
+            ${app.description ? escapeHtml(app.description) : '<span class="italic text-slate-600">No description provided</span>'}
+          </p>
+        </div>
+
+        <!-- Bottom Action CTA -->
+        <div class="pt-3 mt-3 border-t border-slate-800/70 flex items-center justify-between gap-2">
+          <button onclick="copyToClipboard('${escapeJsString(app.url)}')" class="text-[11px] text-slate-400 hover:text-slate-200 font-medium flex items-center gap-1 transition">
+            <i class="fa-solid fa-share-nodes text-[10px]"></i> Quick Copy
+          </button>
+          <a 
+            href="${escapeHtml(app.url)}" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white transition shadow-sm"
+          >
+            <span>Open</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+          </a>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function renderAll() {
+      updateCounts();
+      const container = document.getElementById('links-container');
+      const emptyState = document.getElementById('empty-state');
+      const filtered = getFilteredApps();
+
+      // Update Subheader Info
+      const activeBadge = document.getElementById('active-filter-badge');
+      const showingText = document.getElementById('showing-results-text');
+      
+      showingText.textContent = `Showing ${filtered.length} of ${applications.length} bookmark${applications.length === 1 ? '' : 's'}`;
+      if (selectedCategory) {
+        activeBadge.textContent = `Tag: ${selectedCategory}`;
+        activeBadge.classList.remove('hidden');
+      } else {
+        activeBadge.classList.add('hidden');
+      }
+
+      // Empty State Scenarios
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        if (applications.length === 0) {
+          emptyState.innerHTML = `
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-2xl">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-200 mb-1">Fresh Workspace: No Bookmarks Yet</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+              Your portal is clean. You can add your internal DevOps services manually, import HTML bookmarks from your browser, or restore demo tools anytime.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-2.5">
+              <button onclick="openAddModal()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs rounded-xl transition inline-flex items-center gap-1.5 shadow-md shadow-cyan-600/30">
+                <i class="fa-solid fa-plus"></i> Add Bookmark
+              </button>
+              <button onclick="openBrowserModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-medium text-xs rounded-xl transition inline-flex items-center gap-1.5 border border-slate-700">
+                <i class="fa-solid fa-file-import text-xs"></i> Import Browser HTML
+              </button>
+              <button id="empty-state-reset-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-xl transition inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left text-xs"></i> Load Demo Catalog
+              </button>
+            </div>
+          `;
+          const rBtn = document.getElementById('empty-state-reset-btn');
+          if (rBtn) rBtn.addEventListener('click', restoreDemoTools);
+        } else {
+          emptyState.innerHTML = `
+            <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-500 text-xl">
+              <i class="fa-solid fa-filter-circle-xmark"></i>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-300 mb-1">No applications match your criteria</h3>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto mb-4">Try clearing your search query or selecting a different environment tab.</p>
+            <button onclick="clearSearchAndFilters()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-medium text-xs rounded-lg transition inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i> Reset Filters
+            </button>
+          `;
+        }
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      container.innerHTML = '';
+
+      // If user selected a specific tab (DEV, QA, STAGE, PROD) or turned on flat view:
+      if (activeEnv !== 'ALL' || !isGroupedView) {
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+        filtered.forEach(app => grid.appendChild(createBookmarkCard(app)));
+        container.appendChild(grid);
+        return;
+      }
+
+      // Grouped Swimlane View by Environment
+      const ENV_ORDER = ['DEV', 'QA', 'STAGE', 'PROD'];
+      const grouped = {};
+      ENV_ORDER.forEach(env => grouped[env] = []);
+      filtered.forEach(app => {
+        if (!grouped[app.env]) grouped[app.env] = [];
+        grouped[app.env].push(app);
+      });
+
+      ENV_ORDER.forEach(env => {
+        const items = grouped[env];
+        if (items.length === 0) return;
+
+        const theme = getEnvTheme(env);
+        const section = document.createElement('section');
+        section.className = 'space-y-3.5';
+
+        // Section header
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between pb-2 border-b border-slate-800/80';
+        header.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full ${theme.dot}"></span>
+            <h3 class="text-sm sm:text-base font-bold text-white tracking-wide">${env} Environment</h3>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${theme.badge}">${items.length} service${items.length === 1 ? '' : 's'}</span>
+          </div>
+          <button onclick="selectEnvFilter('${env}')" class="text-xs text-slate-400 hover:text-white transition flex items-center gap-1">
+            <span>Filter tab</span>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        `;
+        section.appendChild(header);
+
+        // Section Cards Grid
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+        items.forEach(app => grid.appendChild(createBookmarkCard(app)));
+        section.appendChild(grid);
+
+        container.appendChild(section);
+      });
+    }
+
+    // Auto-detect environment based on URL or title keywords
+    function detectEnvironmentFromText(url, title, fallback = 'DEV') {
+      const combined = `${url} ${title}`.toLowerCase();
+      if (/(prod|production|live|prd)/.test(combined)) return 'PROD';
+      if (/(stage|staging|stg|uat|preprod)/.test(combined)) return 'STAGE';
+      if (/(qa|test|testing|sit|qc)/.test(combined)) return 'QA';
+      if (/(dev|develop|development|sandbox|local|poc)/.test(combined)) return 'DEV';
+      return fallback;
+    }
+
+    // Auto-detect tool brand icons and categories
+    function detectToolAttributes(url, title) {
+      const text = `${url} ${title}`.toLowerCase();
+      if (text.includes('azure') || text.includes('visualstudio.com')) {
+        return { icon: 'fa-brands fa-microsoft', category: 'CI/CD' };
+      }
+      if (text.includes('jenkins')) {
+        return { icon: 'fa-brands fa-jenkins', category: 'CI/CD' };
+      }
+      if (text.includes('newrelic')) {
+        return { icon: 'fa-solid fa-chart-line', category: 'Monitoring' };
+      }
+      if (text.includes('datadog')) {
+        return { icon: 'fa-solid fa-chart-line', category: 'Monitoring' };
+      }
+      if (text.includes('aws') || text.includes('amazon')) {
+        return { icon: 'fa-brands fa-aws', category: 'Cloud' };
+      }
+      if (text.includes('argocd') || text.includes('k8s') || text.includes('kubernetes')) {
+        return { icon: 'fa-solid fa-dharmachakra', category: 'Kubernetes' };
+      }
+      if (text.includes('docker')) {
+        return { icon: 'fa-brands fa-docker', category: 'Containers' };
+      }
+      if (text.includes('github') || text.includes('gitlab')) {
+        return { icon: 'fa-brands fa-github', category: 'Repos' };
+      }
+      if (text.includes('jira') || text.includes('atlassian')) {
+        return { icon: 'fa-brands fa-jira', category: 'Tracking' };
+      }
+      if (text.includes('vault')) {
+        return { icon: 'fa-solid fa-shield-halved', category: 'Security' };
+      }
+      if (text.includes('swagger') || text.includes('openapi')) {
+        return { icon: 'fa-solid fa-code', category: 'API' };
+      }
+      return { icon: 'fa-solid fa-server', category: 'Infrastructure' };
+    }
+
+    // Parse Netscape Bookmark HTML
+    function parseBrowserBookmarkHtml(htmlContent, fallbackEnv = 'DEV') {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+      const anchors = doc.querySelectorAll('a[href]');
+      const results = [];
+
+      anchors.forEach((a, idx) => {
+        const href = a.getAttribute('href');
+        if (!href || href.startsWith('javascript:') || href.startsWith('place:')) return;
+
+        const title = (a.textContent || href).trim();
+        const detectedEnv = detectEnvironmentFromText(href, title, fallbackEnv);
+        const meta = detectToolAttributes(href, title);
+
+        results.push({
+          id: `imp-${Date.now()}-${idx}`,
+          title: title.slice(0, 100),
+          url: href,
+          env: detectedEnv,
+          category: meta.category,
+          icon: meta.icon,
+          description: `Imported bookmark from browser file.`
+        });
+      });
+
+      return results;
+    }
+
+    function openAddModal() {
+      document.getElementById('edit-id').value = '';
+      document.getElementById('modal-title').textContent = 'Add Application Bookmark';
+      document.getElementById('modal-title-icon').className = 'fa-solid fa-plus text-xs';
+      document.getElementById('save-btn-text').textContent = 'Save Bookmark';
+      document.getElementById('bookmark-form').reset();
+      document.getElementById('form-env').value = activeEnv === 'ALL' ? 'DEV' : activeEnv;
+      document.getElementById('bookmark-modal').classList.remove('hidden');
+      document.getElementById('form-title').focus();
+    }
+
+    function editApp(id) {
+      const app = applications.find(a => a.id === id);
+      if (!app) return;
+
+      document.getElementById('edit-id').value = app.id;
+      document.getElementById('modal-title').textContent = 'Edit Application Bookmark';
+      document.getElementById('modal-title-icon').className = 'fa-solid fa-pen-to-square text-xs';
+      document.getElementById('save-btn-text').textContent = 'Update Bookmark';
+      
+      document.getElementById('form-title').value = app.title || '';
+      document.getElementById('form-url').value = app.url || '';
+      document.getElementById('form-env').value = app.env || 'DEV';
+      document.getElementById('form-category').value = app.category || '';
+      document.getElementById('form-icon').value = app.icon || 'fa-solid fa-server';
+      document.getElementById('form-desc').value = app.description || '';
+
+      document.getElementById('bookmark-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('bookmark-modal').classList.add('hidden');
+    }
+
+    function requestDeleteApp(id) {
+      const app = applications.find(a => a.id === id);
+      if (!app) return;
+      deletingAppId = id;
+      document.getElementById('delete-app-name').textContent = app.title;
+      document.getElementById('delete-modal').classList.remove('hidden');
+    }
+
+    function confirmDelete() {
+      if (!deletingAppId) return;
+      applications = applications.filter(a => a.id !== deletingAppId);
+      saveData();
+      renderCategoryChips();
+      renderAll();
+      document.getElementById('delete-modal').classList.add('hidden');
+      deletingAppId = null;
+      showToast('Bookmark removed', 'fa-solid fa-trash-can');
+    }
+
+    function cancelDelete() {
+      deletingAppId = null;
+      document.getElementById('delete-modal').classList.add('hidden');
+    }
+
+    function openClearAllModal() {
+      document.getElementById('clear-all-modal').classList.remove('hidden');
+    }
+
+    function closeClearAllModal() {
+      document.getElementById('clear-all-modal').classList.add('hidden');
+    }
+
+    function executeStartFresh() {
+      applications = [];
+      saveData();
+      renderCategoryChips();
+      renderAll();
+      closeClearAllModal();
+      showToast('Started fresh! All bookmarks cleared.', 'fa-solid fa-broom');
+    }
+
+    function restoreDemoTools() {
+      applications = JSON.parse(JSON.stringify(DEFAULT_APPS));
+      saveData();
+      renderCategoryChips();
+      renderAll();
+      showToast('Demo DevOps tools restored', 'fa-solid fa-rotate-left');
+    }
+
+    function clearSearchAndFilters() {
+      searchQuery = '';
+      selectedCategory = null;
+      activeEnv = 'ALL';
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search-btn').classList.add('hidden');
+      updateTabStyles();
+      renderCategoryChips();
+      renderAll();
+    }
+
+    function selectEnvFilter(env) {
+      activeEnv = env;
+      updateTabStyles();
+      renderAll();
+    }
+
+    function updateTabStyles() {
+      document.querySelectorAll('.env-tab').forEach(tab => {
+        const tabEnv = tab.dataset.env;
+        if (tabEnv === activeEnv) {
+          tab.classList.remove('text-slate-400', 'border-transparent');
+          tab.classList.add('bg-slate-800', 'text-white', 'border-slate-700', 'shadow-sm');
+        } else {
+          tab.classList.remove('bg-slate-800', 'text-white', 'border-slate-700', 'shadow-sm');
+          tab.classList.add('text-slate-400', 'border-transparent');
+        }
+      });
+    }
+
+    /* Modal controls for Browser Import */
+    function openBrowserModal() {
+      parsedBookmarksCache = [];
+      document.getElementById('browser-file-input').value = '';
+      document.getElementById('file-chosen-name').classList.add('hidden');
+      document.getElementById('import-preview-box').classList.add('hidden');
+      document.getElementById('confirm-browser-import-btn').disabled = true;
+      document.getElementById('browser-modal').classList.remove('hidden');
+    }
+
+    function closeBrowserModal() {
+      document.getElementById('browser-modal').classList.add('hidden');
+    }
+
+    function openBackupModal() {
+      document.getElementById('json-payload-area').value = JSON.stringify(applications, null, 2);
+      document.getElementById('backup-modal').classList.remove('hidden');
+    }
+
+    function closeBackupModal() {
+      document.getElementById('backup-modal').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJsString(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderCategoryChips();
+      renderAll();
+
+      // Top Actions
+      document.getElementById('add-link-btn').addEventListener('click', openAddModal);
+      document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('cancel-form-btn').addEventListener('click', closeModal);
+      
+      // Browser Import Modal
+      document.getElementById('browser-import-btn').addEventListener('click', openBrowserModal);
+      document.getElementById('close-browser-modal-btn').addEventListener('click', closeBrowserModal);
+      document.getElementById('cancel-browser-modal-btn').addEventListener('click', closeBrowserModal);
+
+      // Backup JSON Modal
+      document.getElementById('backup-btn').addEventListener('click', openBackupModal);
+      document.getElementById('close-backup-modal-btn').addEventListener('click', closeBackupModal);
+      
+      // Delete Confirmation
+      document.getElementById('confirm-delete-btn').addEventListener('click', confirmDelete);
+      document.getElementById('cancel-delete-btn').addEventListener('click', cancelDelete);
+
+      // Start Fresh & Reset Defaults
+      document.getElementById('start-fresh-btn').addEventListener('click', openClearAllModal);
+      document.getElementById('cancel-clear-btn').addEventListener('click', closeClearAllModal);
+      document.getElementById('confirm-clear-btn').addEventListener('click', executeStartFresh);
+      document.getElementById('reset-defaults-btn').addEventListener('click', restoreDemoTools);
+
+      // Environment Tabs
+      document.querySelectorAll('.env-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          activeEnv = tab.dataset.env;
+          updateTabStyles();
+          renderAll();
+        });
+      });
+
+      // View Mode Toggle (Grouped vs Flat)
+      const viewToggle = document.getElementById('view-mode-toggle');
+      const viewIcon = document.getElementById('view-mode-icon');
+      viewToggle.addEventListener('click', () => {
+        isGroupedView = !isGroupedView;
+        viewIcon.className = isGroupedView ? 'fa-solid fa-table-cells-large text-slate-300' : 'fa-solid fa-list text-cyan-400';
+        showToast(isGroupedView ? 'Grouped view enabled' : 'Flat grid view enabled', 'fa-solid fa-table-cells');
+        renderAll();
+      });
+
+      // Live Search Listener
+      const searchInput = document.getElementById('search-input');
+      const clearSearchBtn = document.getElementById('clear-search-btn');
+
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        if (searchQuery) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+        renderAll();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        clearSearchBtn.classList.add('hidden');
+        renderAll();
+        searchInput.focus();
+      });
+
+      // Form Submit (Add or Edit)
+      document.getElementById('bookmark-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('edit-id').value;
+        const title = document.getElementById('form-title').value.trim();
+        const url = document.getElementById('form-url').value.trim();
+        const env = document.getElementById('form-env').value;
+        const category = document.getElementById('form-category').value.trim() || 'General';
+        const icon = document.getElementById('form-icon').value;
+        const description = document.getElementById('form-desc').value.trim();
+
+        if (editId) {
+          // Edit existing
+          const index = applications.findIndex(a => a.id === editId);
+          if (index !== -1) {
+            applications[index] = { ...applications[index], title, url, env, category, icon, description };
+            showToast('Bookmark updated successfully!', 'fa-solid fa-check');
+          }
+        } else {
+          // Create new
+          const newApp = {
+            id: 'app-' + Date.now(),
+            title,
+            url,
+            env,
+            category,
+            icon,
+            description
+          };
+          applications.unshift(newApp);
+          showToast('Added bookmark to ' + env, 'fa-solid fa-check');
+        }
+
+        saveData();
+        renderCategoryChips();
+        renderAll();
+        closeModal();
+      });
+
+      // Drag and Drop & File Upload handling
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('browser-file-input');
+      const fileNameDisplay = document.getElementById('file-chosen-name');
+      const confirmImportBtn = document.getElementById('confirm-browser-import-btn');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-cyan-400', 'bg-cyan-500/10');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-cyan-400', 'bg-cyan-500/10');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-cyan-400', 'bg-cyan-500/10');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          processBookmarkFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          processBookmarkFile(e.target.files[0]);
+        }
+      });
+
+      function processBookmarkFile(file) {
+        fileNameDisplay.textContent = file.name;
+        fileNameDisplay.classList.remove('hidden');
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const fallback = document.getElementById('import-default-env').value;
+          const parsed = parseBrowserBookmarkHtml(event.target.result, fallback);
+          parsedBookmarksCache = parsed;
+
+          if (parsed.length === 0) {
+            showToast('No valid link tags found in this file.', 'fa-solid fa-circle-exclamation', true);
+            confirmImportBtn.disabled = true;
+            return;
+          }
+
+          // Update counts in preview
+          const counts = { DEV: 0, QA: 0, STAGE: 0, PROD: 0 };
+          parsed.forEach(p => {
+            if (counts[p.env] !== undefined) counts[p.env]++;
+          });
+
+          document.getElementById('import-total-count').textContent = `${parsed.length} links`;
+          document.getElementById('parse-count-dev').textContent = counts.DEV;
+          document.getElementById('parse-count-qa').textContent = counts.QA;
+          document.getElementById('parse-count-stage').textContent = counts.STAGE;
+          document.getElementById('parse-count-prod').textContent = counts.PROD;
+
+          document.getElementById('import-preview-box').classList.remove('hidden');
+          confirmImportBtn.disabled = false;
+        };
+        reader.readAsText(file);
+      }
+
+      confirmImportBtn.addEventListener('click', () => {
+        if (!parsedBookmarksCache || parsedBookmarksCache.length === 0) return;
+        
+        const mode = document.getElementById('import-merge-mode').value;
+        if (mode === 'replace') {
+          applications = parsedBookmarksCache;
+        } else {
+          // Append with basic duplicate URL prevention
+          const existingUrls = new Set(applications.map(a => a.url.toLowerCase()));
+          const newEntries = parsedBookmarksCache.filter(p => !existingUrls.has(p.url.toLowerCase()));
+          applications = [...applications, ...newEntries];
+        }
+
+        saveData();
+        renderCategoryChips();
+        renderAll();
+        closeBrowserModal();
+        showToast(`Imported ${parsedBookmarksCache.length} bookmarks successfully!`, 'fa-solid fa-file-circle-check');
+      });
+
+      // JSON Export/Import handlers
+      document.getElementById('download-json-btn').addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(applications, null, 2));
+        const dlAnchor = document.createElement('a');
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", `devops_bookmarks_backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+        showToast('JSON backup file downloaded', 'fa-solid fa-download');
+      });
+
+      document.getElementById('copy-json-btn').addEventListener('click', () => {
+        const text = document.getElementById('json-payload-area').value;
+        copyToClipboard(text, 'JSON Catalog');
+      });
+
+      document.getElementById('import-json-btn').addEventListener('click', () => {
+        try {
+          const raw = document.getElementById('json-payload-area').value;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error('Data must be an array of application objects');
+          
+          applications = parsed;
+          saveData();
+          renderCategoryChips();
+          renderAll();
+          closeBackupModal();
+          showToast('JSON catalog successfully loaded!', 'fa-solid fa-check');
+        } catch (err) {
+          showToast('Invalid JSON structure: ' + err.message, 'fa-solid fa-circle-exclamation', true);
+        }
+      });
+
+      // Keyboard shortcuts: '/' for search, 'Esc' to close active modals
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== searchInput && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          searchInput.focus();
+        } else if (e.key === 'Escape') {
+          closeModal();
+          closeBrowserModal();
+          closeBackupModal();
+          cancelDelete();
+          closeClearAllModal();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

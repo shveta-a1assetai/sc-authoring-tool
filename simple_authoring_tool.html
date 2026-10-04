@@ -443,23 +443,85 @@ childPhBlock + '\n' +
     };
 
     const generateSpeScript = (comp) => {
-      return '# Sitecore PowerShell Extensions (SPE): 1-Click Component Scaffolder\n' +
+      const allowedPhs = (comp.allowedPlaceholders && comp.allowedPlaceholders.length > 0)
+        ? comp.allowedPlaceholders.map(p => p.key).join('|')
+        : 'headless-main';
+
+      const fieldCreationLines = comp.fields.map(f => 
+        '# Field: ' + f.name + '\n' +
+        '$fieldPath = "$sectionPath/' + f.name + '"\n' +
+        '$fItem = if (Test-Path -Path "master:$fieldPath") { Get-Item -Path "master:$fieldPath" } else { New-Item -Path "master:$fieldPath" -ItemType "/sitecore/templates/System/Templates/Template field" -Force }\n' +
+        '$fItem.Editing.BeginEdit()\n' +
+        '$fItem["Type"] = "' + f.type + '"\n' +
+        '$fItem["Title"] = "' + f.name + '"\n' +
+        '$fItem.Editing.EndEdit()'
+      ).join('\n\n');
+
+      return '# =========================================================================\n' +
+'# Sitecore PowerShell Extensions (SPE) 1-Click Component Scaffolder\n' +
+'# Component: ' + comp.name + '\n' +
+'# =========================================================================\n\n' +
+'$ErrorActionPreference = "Stop"\n' +
 '$componentName = "' + comp.name + '"\n' +
 '$category = "' + comp.category + '"\n' +
-'$templatePath = "/sitecore/templates/Project/Components/" + $componentName\n' +
-'$renderingPath = "/sitecore/layout/Renderings/Project/" + $category + "/" + $componentName\n\n' +
-'# 1. Create Data Template\n' +
-'$templateItem = New-Item -Path $templatePath -ItemType "Template" -Force\n' +
-'$sectionItem = New-Item -Path "$templatePath/Data" -ItemType "Template section" -Force\n\n' +
-'# 2. Create Template Fields\n' +
-comp.fields.map(f => '$field = New-Item -Path "$templatePath/Data/' + f.name + '" -ItemType "Template field" -Force; $field.Type = "' + f.type + '"').join('\n') + '\n\n' +
-'# 3. Create JSON Rendering\n' +
-'$renderingItem = New-Item -Path $renderingPath -ItemType "/sitecore/templates/System/Layout/Renderings/Json Rendering" -Force\n' +
-'$renderingItem.ComponentName = $componentName\n' +
-'$renderingItem.DatasourceLocation = "query:$site/*[@@name=\'Data\']/*[@@name=\'" + $componentName + "s\']"\n' +
-'$renderingItem.DatasourceTemplate = $templatePath\n' +
-'$renderingItem.AllowedPlaceholders = "' + (comp.allowedPlaceholders || []).map(p => p.key).join('|') + '"\n\n' +
-'Write-Host "✅ Created Sitecore Data Template and Rendering for $componentName!" -ForegroundColor Green';
+'$allowedPlaceholders = "' + allowedPhs + '"\n\n' +
+'# Elevate security context for automation script execution\n' +
+'$securityDisabler = New-Object Sitecore.SecurityModel.SecurityDisabler\n\n' +
+'# Recursive Sitecore folder hierarchy creator\n' +
+'function Ensure-SitecoreFolder {\n' +
+'    param(\n' +
+'        [string]$Path,\n' +
+'        [string]$TemplatePath\n' +
+'    )\n' +
+'    $cleanPath = $Path -replace "^master:", ""\n' +
+'    $parts = $cleanPath.Trim("/").Split("/")\n' +
+'    $current = "master:/sitecore"\n' +
+'    $startIndex = if ($parts[0] -eq "sitecore") { 1 } else { 0 }\n\n' +
+'    for ($i = $startIndex; $i -lt $parts.Length; $i++) {\n' +
+'        $part = $parts[$i]\n' +
+'        if ([string]::IsNullOrWhiteSpace($part)) { continue }\n' +
+'        $current = "$current/$part"\n' +
+'        if (-not (Test-Path -Path $current)) {\n' +
+'            New-Item -Path $current -ItemType $TemplatePath -Force | Out-Null\n' +
+'            Write-Host "Created folder: $current" -ForegroundColor DarkGray\n' +
+'        }\n' +
+'    }\n' +
+'    return Get-Item -Path $current\n' +
+'}\n\n' +
+'# 1. Ensure Target Template & Rendering Parent Folders Exist\n' +
+'$templateParent = Ensure-SitecoreFolder -Path "/sitecore/templates/Project/Components/$category" -TemplatePath "/sitecore/templates/System/Templates/Template Folder"\n' +
+'$renderingParent = Ensure-SitecoreFolder -Path "/sitecore/layout/Renderings/Project/$category" -TemplatePath "/sitecore/templates/Common/Folder"\n\n' +
+'# 2. Create or Get Data Template\n' +
+'$templatePath = "$($templateParent.Paths.FullPath)/$componentName"\n' +
+'$templateItem = if (Test-Path -Path "master:$templatePath") { Get-Item -Path "master:$templatePath" } else { New-Item -Path "master:$templatePath" -ItemType "/sitecore/templates/System/Templates/Template" -Force }\n\n' +
+'# 3. Create or Get Template Section ("Data")\n' +
+'$sectionPath = "$templatePath/Data"\n' +
+'$sectionItem = if (Test-Path -Path "master:$sectionPath") { Get-Item -Path "master:$sectionPath" } else { New-Item -Path "master:$sectionPath" -ItemType "/sitecore/templates/System/Templates/Template section" -Force }\n\n' +
+'# 4. Create Template Fields\n' +
+fieldCreationLines + '\n\n' +
+'# 5. Resolve JSON Rendering Template (Checks JSS, Headless, SXA & Standard Renderings)\n' +
+'$renderingTplPath = "/sitecore/templates/System/Layout/Renderings/Json Rendering"\n' +
+'if (-not (Test-Path -Path "master:$renderingTplPath")) {\n' +
+'    $renderingTplPath = "/sitecore/templates/Foundation/JavaScript Services/Json Rendering"\n' +
+'}\n' +
+'if (-not (Test-Path -Path "master:$renderingTplPath")) {\n' +
+'    $renderingTplPath = "/sitecore/templates/Foundation/Experience Accelerator/Rendering/Json Rendering"\n' +
+'}\n\n' +
+'# 6. Create or Get JSON Rendering Item\n' +
+'$renderingPath = "$($renderingParent.Paths.FullPath)/$componentName"\n' +
+'$renderingItem = if (Test-Path -Path "master:$renderingPath") { Get-Item -Path "master:$renderingPath" } else { New-Item -Path "master:$renderingPath" -ItemType $renderingTplPath -Force }\n\n' +
+'$renderingItem.Editing.BeginEdit()\n' +
+'$renderingItem["Component Name"] = $componentName\n' +
+'$renderingItem["Datasource Template"] = $templateItem.ID.ToString()\n' +
+'$renderingItem["Datasource Location"] = "query:$site/*[@@name=\'Data\']/*[@@name=\'" + $componentName + "s\']"\n' +
+'$renderingItem["Allowed Placeholders"] = $allowedPlaceholders\n' +
+'$renderingItem["Open Properties after Add"] = "0"\n' +
+'$renderingItem.Editing.EndEdit()\n\n' +
+'Write-Host "=========================================================" -ForegroundColor Green\n' +
+'Write-Host "✅ Successfully provisioned $componentName in Sitecore CM!" -ForegroundColor Green\n' +
+'Write-Host "   Data Template: $($templateItem.Paths.FullPath)" -ForegroundColor Cyan\n' +
+'Write-Host "   JSON Rendering: $($renderingItem.Paths.FullPath)" -ForegroundColor Cyan\n' +
+'Write-Host "=========================================================" -ForegroundColor Green';
     };
 
     // --- MARKDOWN DOCUMENT GENERATOR (Audience Specific: Authors, Developers, Both) ---

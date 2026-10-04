@@ -138,7 +138,12 @@
         user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
         cloudDownload: <><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></>,
         externalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
-        alertTriangle: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
+        alertTriangle: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+        link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+        check: <><polyline points="20 6 9 17 4 12"/></>,
+        fileCode: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><polyline points="10 13 8 15 10 17"/><polyline points="14 13 16 15 14 17"/></>,
+        gitBranch: <><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></>,
+        server: <><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></>
       };
 
       return (
@@ -524,74 +529,129 @@ fieldCreationLines + '\n\n' +
 'Write-Host "=========================================================" -ForegroundColor Green';
     };
 
-    // --- MARKDOWN DOCUMENT GENERATOR (Audience Specific: Authors, Developers, Both) ---
-    const generateMarkdownDocs = (components, audience = 'both') => {
+    // --- MARKDOWN DOCUMENT GENERATOR (Audience Specific: Authors, Developers, Both / End-to-End) ---
+    const generateMarkdownDocs = (components, audience = 'both', linkedFiles = {}) => {
       const isAuthor = audience === 'author' || audience === 'both';
       const isDev = audience === 'dev' || audience === 'both';
-      const audienceLabel = audience === 'author' ? 'Content Authors Guide' :
-                            audience === 'dev' ? 'Developer & Technical Specification' :
-                            'Comprehensive Authoring & Technical Specification';
+      const audienceLabel = audience === 'author' ? 'Content Authors Playbook' :
+                            audience === 'dev' ? 'Technical Architect & Developer Specification' :
+                            'Comprehensive End-to-End Headless Specification (Authoring & Technical)';
 
-      let md = '# Sitecore Headless Component Documentation\n';
-      md += '**Target Audience:** ' + audienceLabel + '  \n';
+      let md = '# Sitecore Headless 10.4 + Next.js Component Specification\n';
+      md += '**Document Type:** ' + audienceLabel + '  \n';
       md += '**Generated At:** ' + new Date().toLocaleDateString() + '  \n';
-      md += '**Architecture:** Sitecore 10.4 SXA Headless with Next.js (SSG/ISR)\n\n';
+      md += '**Architecture:** Sitecore 10.4 SXA Headless + Next.js (SSG/ISR with @sitecore-jss/sitecore-jss-nextjs)\n\n';
       md += '---\n\n';
 
       components.forEach((comp, idx) => {
+        const linkedFile = linkedFiles[comp.name];
+        const nextjsCode = linkedFile ? linkedFile.content : generateNextjsTsx(comp);
+        const scsYaml = generateScsYaml(comp);
+
         md += '## ' + (idx + 1) + '. ' + comp.name + '\n\n';
         md += '**Category:** `' + comp.category + '` | **SXA Module:** `' + (comp.sxaModule || 'Composables') + '`\n\n';
         md += '> ' + comp.description + '\n\n';
 
-        // Placement & Placeholders
-        md += '### 📍 Placement & Placeholders (Bi-Directional)\n\n';
-        md += '- **Allowed Page Placeholders (Parent):** ' + ((comp.allowedPlaceholders || []).map(p => '`' + p.key + '`').join(', ') || '`headless-main`') + '\n';
+        // 1. End-to-End 3-Tier Flow Architecture
+        md += '### 🔄 1. End-to-End 3-Tier Architecture Flow\n\n';
+        md += '```\n';
+        md += '┌───────────────────────────────────┐\n';
+        md += '│ 1. Sitecore CM Backend            │\n';
+        md += '│  - Template: ' + (comp.datasourceTemplate?.path || '/sitecore/templates/Project/Components/' + comp.name) + '\n';
+        md += '│  - Rendering: /sitecore/layout/Renderings/Project/' + comp.category + '/' + comp.name + '\n';
+        md += '│  - Datasource Location: ' + (comp.datasourceTemplate?.defaultLocationQuery || './_Data/' + comp.name + 's') + '\n';
+        md += '└─────────────────┬─────────────────┘\n';
+        md += '                  │ (JSS REST / GraphQL Edge Layout Service)\n';
+        md += '                  ▼\n';
+        md += '┌───────────────────────────────────┐\n';
+        md += '│ 2. Layout Service JSON Payload    │\n';
+        md += '│  - componentName: "' + comp.name + '"\n';
+        md += '│  - fields: { ' + comp.fields.slice(0, 3).map(f => f.name.charAt(0).toLowerCase() + f.name.slice(1) + ': { value: ... }').join(', ') + ' }\n';
+        md += '└─────────────────┬─────────────────┘\n';
+        md += '                  │ (ComponentFactory & React Props Binding)\n';
+        md += '                  ▼\n';
+        md += '┌───────────────────────────────────┐\n';
+        md += '│ 3. Next.js Front-End View         │\n';
+        md += '│  - Component: src/components/' + comp.name + '.tsx\n';
+        md += '│  - Props: ' + comp.name + 'Props\n';
+        md += '│  - Experience Editor Inline Safe  │\n';
+        md += '└───────────────────────────────────┘\n';
+        md += '```\n\n';
+
+        // 2. Placement & Placeholders (Bi-Directional)
+        md += '### 📍 2. Placement & Placeholders (Bi-Directional)\n\n';
+        md += '- **Allowed Page Placeholders (Parent Slots):** ' + ((comp.allowedPlaceholders || []).map(p => '`' + p.key + '`').join(', ') || '`headless-main`') + '\n';
         if (comp.childPlaceholder?.enabled) {
-          md += '- **Inner Child Slot:** `Placeholder: ' + comp.childPlaceholder.name + '` *(Accepts nested components inside this container)*\n';
+          md += '- **Nested Child Slot:** `<Placeholder name="' + comp.childPlaceholder.name + '" rendering={props.rendering} />` *(Accepts nested child components)*\n';
         } else {
-          md += '- **Inner Child Slot:** *None (Atomic Component)*\n';
+          md += '- **Nested Child Slot:** *None (Atomic Component)*\n';
         }
         md += '\n';
 
-        // Content Authoring Guidelines Section
+        // 3. Content Authoring Guidelines Section
         if (isAuthor) {
-          md += '### ✍️ Content Authoring Guidelines\n\n';
+          md += '### ✍️ 3. Content Authoring Playbook\n\n';
           md += '#### Field Specification Table\n\n';
-          md += '| Field Name | Field Type | Limit / Recommendation | Required | Authoring Purpose & Instructions |\n';
+          md += '| Field Name | Sitecore Type | Limit / Recommendation | Required | Authoring Instructions & Purpose |\n';
           md += '| :--- | :--- | :--- | :---: | :--- |\n';
           comp.fields.forEach(f => {
-            md += '| **' + f.name + '** | `' + f.type + '` | ' + (f.limit || 'Standard') + ' | ' + (f.required ? '✅ Yes' : 'No') + ' | ' + (f.description || 'Editable content') + ' |\n';
+            md += '| **' + f.name + '** | `' + f.type + '` | ' + (f.limit || 'Standard') + ' | ' + (f.required ? '✅ Yes' : 'No') + ' | ' + (f.description || 'Editable in Experience Editor') + ' |\n';
           });
           md += '\n';
 
           if (comp.renderingParams && comp.renderingParams.length > 0) {
-            md += '#### 🎨 Rendering Parameters (Visual Variations)\n\n';
+            md += '#### 🎨 Visual Variants & Rendering Parameters\n\n';
             comp.renderingParams.forEach(rp => {
               md += '- **' + rp.param + ':** Available options: `' + rp.options.join('`, `') + '` *(Default: `' + rp.default + '`)*\n';
             });
             md += '\n';
           }
 
-          md += '#### 💡 Authoring Best Practices\n';
-          md += '- **Datasource Storage:** Save items under `' + (comp.datasourceTemplate?.defaultLocationQuery || './_Data/' + comp.name + 's') + '`.\n';
-          md += '- **Experience Editor:** All headline, rich text, image, and link fields can be edited directly inline on the page canvas.\n';
-          md += '- **Workflow & Publishing:** Always approve datasources and the associated page item before publishing to production.\n\n';
+          md += '#### 💡 Content Authoring Best Practices\n';
+          md += '1. **Datasource Storage:** Save datasource items under `' + (comp.datasourceTemplate?.defaultLocationQuery || './_Data/' + comp.name + 's') + '`.\n';
+          md += '2. **Experience Editor / Sitecore Pages:** Click directly on headlines, rich text, images, and links to edit values with live in-canvas preview.\n';
+          md += '3. **Publishing Workflow:** Approve and publish the datasource item and associated route together to update live visitor channels.\n\n';
         }
 
-        // Developer & Technical Section
+        // 4. Developer & Technical Architecture Specification
         if (isDev) {
-          md += '### 💻 Developer Specifications\n\n';
-          md += '- **Sitecore Data Template:** `' + (comp.datasourceTemplate?.path || '/sitecore/templates/Project/Components/' + comp.name) + '`\n';
-          md += '- **Next.js Component File:** `src/components/' + comp.name + '.tsx`\n';
-          md += '- **Layout Service Model:** JSS REST / GraphQL Edge schema\n\n';
+          md += '### 💻 4. Technical Architect & Developer Contract\n\n';
+          
+          // Field Contract & Binding Table
+          md += '#### Field Contract & Binding Matrix\n\n';
+          md += '| Sitecore Field | Field Type | Next.js TypeScript Prop | JSS Component Binding | Status |\n';
+          md += '| :--- | :--- | :--- | :--- | :---: |\n';
+          comp.fields.forEach(f => {
+            const vName = f.name.charAt(0).toLowerCase() + f.name.slice(1);
+            const jssTag = f.type === 'Image' ? '<Image field={fields.' + vName + '} />' :
+                           f.type === 'General Link' ? '<Link field={fields.' + vName + '} />' :
+                           f.type === 'Rich Text' ? '<RichText field={fields.' + vName + '} />' :
+                           '<Text field={fields.' + vName + '} />';
+            md += '| **' + f.name + '** | `' + f.type + '` | `fields.' + vName + '?: ' + getFieldTsType(f.type) + '` | `' + jssTag + '` | ✅ Matched |\n';
+          });
+          md += '\n';
 
-          md += '#### TypeScript Props Contract\n\n```typescript\n';
+          // TypeScript Props Interface
+          md += '#### TypeScript Props Interface\n\n```typescript\n';
           md += 'export interface ' + comp.name + 'Fields {\n';
           comp.fields.forEach(f => {
             const vName = f.name.charAt(0).toLowerCase() + f.name.slice(1);
             md += '  ' + vName + '?: ' + getFieldTsType(f.type) + '; // ' + f.type + (f.required ? ' (Required)' : '') + '\n';
           });
+          md += '}\n\n';
+          md += 'export interface ' + comp.name + 'Props {\n';
+          md += '  rendering: ComponentRendering;\n';
+          md += '  params?: ComponentParams;\n';
+          md += '  fields: ' + comp.name + 'Fields;\n';
           md += '}\n```\n\n';
+
+          // Next.js Component TSX
+          md += '#### Next.js React Component Source (`src/components/' + comp.name + '.tsx`)\n\n```tsx\n';
+          md += nextjsCode + '\n```\n\n';
+
+          // SCS YAML Serialization
+          md += '#### Sitecore Content Serialization (SCS YAML)\n\n```yaml\n';
+          md += scsYaml + '\n```\n\n';
         }
 
         md += '---\n\n';
@@ -646,6 +706,18 @@ fieldCreationLines + '\n\n' +
       const [docAudience, setDocAudience] = useState('author'); // 'author' | 'dev' | 'both'
       const [docScope, setDocScope] = useState('all'); // 'all' | 'single'
       const [docSelectedCompId, setDocSelectedCompId] = useState('HeroBanner');
+
+      // Next.js Project Linker & Source Code State
+      const [nextjsLinkedProject, setNextjsLinkedProject] = useState(() => {
+        try {
+          const saved = localStorage.getItem('sitecore_compass_nextjs_project');
+          if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return { isLinked: false, folderName: '', filesCount: 0, files: {}, lastScanned: null };
+      });
+      const [nextjsLinkModalOpen, setNextjsLinkModalOpen] = useState(false);
+      const [nextjsSearchFilter, setNextjsSearchFilter] = useState('');
+      const [nextjsLiveEditorCode, setNextjsLiveEditorCode] = useState('');
 
       // Sitecore Import / Harvest State
       const [syncRoutePath, setSyncRoutePath] = useState('/about-us');
@@ -730,6 +802,198 @@ fieldCreationLines + '\n\n' +
         try {
           localStorage.setItem('sitecore_compass_custom_specs', JSON.stringify(updated));
         } catch(e) {}
+      };
+
+      // Persist Next.js linked project
+      const persistNextjsProject = (project) => {
+        setNextjsLinkedProject(project);
+        try {
+          localStorage.setItem('sitecore_compass_nextjs_project', JSON.stringify(project));
+        } catch(e) {
+          console.warn('LocalStorage limit for Next.js files', e);
+        }
+      };
+
+      // 1-Click Browser Directory Picker API (Modern Chrome/Edge)
+      const linkNextjsFolderViaApi = async () => {
+        try {
+          if (!window.showDirectoryPicker) {
+            showToast('Direct directory picker not supported on this browser. Use folder upload instead.');
+            setNextjsLinkModalOpen(true);
+            return;
+          }
+          const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+          const filesMap = {};
+          let count = 0;
+
+          async function scanDirectory(handle, path = '') {
+            for await (const entry of handle.values()) {
+              if (entry.kind === 'file' && (entry.name.endsWith('.tsx') || entry.name.endsWith('.jsx') || entry.name.endsWith('.ts'))) {
+                const file = await entry.getFile();
+                const text = await file.text();
+                const compName = entry.name.replace(/\.(tsx|jsx|ts)$/, '');
+                filesMap[compName] = {
+                  name: entry.name,
+                  compName: compName,
+                  path: path ? `${path}/${entry.name}` : entry.name,
+                  content: text,
+                  size: file.size,
+                  lastModified: file.lastModified
+                };
+                count++;
+              } else if (entry.kind === 'directory' && !['node_modules', '.next', '.git', 'out', 'build', 'public', 'styles'].includes(entry.name)) {
+                await scanDirectory(entry, path ? `${path}/${entry.name}` : entry.name);
+              }
+            }
+          }
+
+          await scanDirectory(dirHandle, dirHandle.name);
+          const projectData = {
+            isLinked: true,
+            folderName: dirHandle.name,
+            filesCount: count,
+            files: filesMap,
+            lastScanned: new Date().toLocaleTimeString()
+          };
+          persistNextjsProject(projectData);
+          setNextjsLinkModalOpen(false);
+          showToast(`Linked Next.js project "${dirHandle.name}"! Loaded ${count} component files.`);
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            showToast('Error reading folder: ' + err.message);
+          }
+        }
+      };
+
+      // Folder Upload Input Handler (Fallback for all browsers)
+      const handleNextjsFolderUpload = (e) => {
+        const fileList = e.target.files;
+        if (!fileList || fileList.length === 0) return;
+        const filesMap = {};
+        let count = 0;
+        let rootName = '';
+
+        const validFiles = Array.from(fileList).filter(f => 
+          (f.name.endsWith('.tsx') || f.name.endsWith('.jsx') || f.name.endsWith('.ts')) &&
+          !f.webkitRelativePath.includes('node_modules') &&
+          !f.webkitRelativePath.includes('.next')
+        );
+
+        if (validFiles.length === 0) {
+          showToast('No .tsx / .jsx component files found in selected folder.');
+          return;
+        }
+
+        const readPromises = validFiles.map(f => {
+          if (!rootName && f.webkitRelativePath) {
+            rootName = f.webkitRelativePath.split('/')[0];
+          }
+          return f.text().then(text => {
+            const compName = f.name.replace(/\.(tsx|jsx|ts)$/, '');
+            filesMap[compName] = {
+              name: f.name,
+              compName: compName,
+              path: f.webkitRelativePath || f.name,
+              content: text,
+              size: f.size,
+              lastModified: f.lastModified
+            };
+            count++;
+          });
+        });
+
+        Promise.all(readPromises).then(() => {
+          const projectData = {
+            isLinked: true,
+            folderName: rootName || 'Next.js Project',
+            filesCount: count,
+            files: filesMap,
+            lastScanned: new Date().toLocaleTimeString()
+          };
+          persistNextjsProject(projectData);
+          setNextjsLinkModalOpen(false);
+          showToast(`Successfully linked ${count} Next.js components!`);
+        });
+      };
+
+      // Single .tsx File Upload
+      const handleSingleFileDrop = (e) => {
+        const files = e.target?.files || e.dataTransfer?.files;
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        if (!file.name.endsWith('.tsx') && !file.name.endsWith('.jsx') && !file.name.endsWith('.ts')) {
+          showToast('Please select a .tsx or .jsx component file');
+          return;
+        }
+        file.text().then(text => {
+          const compName = file.name.replace(/\.(tsx|jsx|ts)$/, '');
+          const updatedFiles = {
+            ...nextjsLinkedProject.files,
+            [compName]: {
+              name: file.name,
+              compName: compName,
+              path: `src/components/${file.name}`,
+              content: text,
+              size: file.size,
+              lastModified: file.lastModified
+            }
+          };
+          const projectData = {
+            isLinked: true,
+            folderName: nextjsLinkedProject.folderName || 'Local Project',
+            filesCount: Object.keys(updatedFiles).length,
+            files: updatedFiles,
+            lastScanned: new Date().toLocaleTimeString()
+          };
+          persistNextjsProject(projectData);
+          showToast(`Imported ${file.name} for ${compName}!`);
+        });
+      };
+
+      // Analyze End-to-End Flow & Diff
+      const analyzeEndToEndFlow = (comp) => {
+        const linkedFile = nextjsLinkedProject.files && nextjsLinkedProject.files[comp.name];
+        const isLiveFile = !!linkedFile;
+        const codeText = linkedFile ? linkedFile.content : generateNextjsTsx(comp);
+
+        const fieldDiagnostics = comp.fields.map(f => {
+          const vName = f.name.charAt(0).toLowerCase() + f.name.slice(1);
+          // Check if field or prop is mentioned in code
+          const isPropInCode = codeText.includes(vName) || codeText.includes(f.name);
+          const hasJssComponent = (f.type === 'Image' && codeText.includes('Image')) ||
+                                  (f.type === 'General Link' && codeText.includes('Link')) ||
+                                  (f.type === 'Rich Text' && codeText.includes('RichText')) ||
+                                  (codeText.includes('Text') || codeText.includes('Field'));
+          return {
+            name: f.name,
+            vName: vName,
+            type: f.type,
+            required: f.required,
+            isPropInCode: isPropInCode,
+            hasJssComponent: hasJssComponent,
+            status: isPropInCode ? 'matched' : 'missing'
+          };
+        });
+
+        const childPh = comp.childPlaceholder?.enabled ? {
+          name: comp.childPlaceholder.name || 'child-content',
+          isRenderedInNextjs: codeText.includes('Placeholder') && codeText.includes(comp.childPlaceholder.name || 'child-content')
+        } : null;
+
+        const matchedCount = fieldDiagnostics.filter(f => f.status === 'matched').length;
+        const totalCount = fieldDiagnostics.length;
+        const matchPercentage = totalCount > 0 ? Math.round((matchedCount / totalCount) * 100) : 100;
+
+        return {
+          isLiveFile,
+          filePath: linkedFile ? linkedFile.path : `src/components/${comp.name}.tsx`,
+          codeText,
+          fieldDiagnostics,
+          childPh,
+          matchPercentage,
+          matchedCount,
+          totalCount
+        };
       };
 
       // Test Connection (Simple GET request)
@@ -1173,8 +1437,23 @@ fieldCreationLines + '\n\n' +
               </button>
             </div>
 
-            {/* Right: Connection & Settings */}
-            <div className="flex items-center gap-3">
+            {/* Right: Next.js Link, Connection & Settings */}
+            <div className="flex items-center gap-2.5">
+              {/* Link Next.js Project Button */}
+              <button
+                onClick={() => setNextjsLinkModalOpen(true)}
+                className={`flex items-center gap-1.5 border rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                  nextjsLinkedProject.isLinked
+                    ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                }`}
+                title="Link local Next.js project directory (src/components) to view real front-end component code"
+              >
+                <Icon name="fileCode" className={`w-3.5 h-3.5 ${nextjsLinkedProject.isLinked ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span className="font-mono">{nextjsLinkedProject.isLinked ? `${nextjsLinkedProject.folderName} (${nextjsLinkedProject.filesCount})` : 'Link Next.js'}</span>
+                {nextjsLinkedProject.isLinked && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
+              </button>
+
               {/* Endpoint Connection Status */}
               <button
                 onClick={() => testConnection(currentEnv)}
@@ -1222,12 +1501,21 @@ fieldCreationLines + '\n\n' +
                       {/* Action buttons */}
                       <div className="flex items-center gap-1.5">
                         <button
+                          onClick={() => setNextjsLinkModalOpen(true)}
+                          className="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1"
+                          title="Link or inspect Next.js front-end components"
+                        >
+                          <Icon name="fileCode" className="w-3.5 h-3.5" />
+                          <span>Next.js</span>
+                        </button>
+
+                        <button
                           onClick={() => setSyncModalOpen(true)}
                           className="p-1.5 rounded-lg bg-cyan-600/20 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all text-xs font-bold flex items-center gap-1"
                           title="Harvest / Read existing components from Sitecore"
                         >
                           <Icon name="cloudDownload" className="w-3.5 h-3.5" />
-                          <span>Read from SC</span>
+                          <span>Read SC</span>
                         </button>
 
                         <button
@@ -1320,6 +1608,19 @@ fieldCreationLines + '\n\n' +
                           >
                             <Icon name="eye" className="w-3.5 h-3.5" />
                             <span>Inspect Spec</span>
+                          </button>
+
+                          <button
+                            onClick={() => setComponentDetailViewMode('flow')}
+                            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                              componentDetailViewMode === 'flow' ? 'bg-indigo-600 text-white shadow ring-1 ring-indigo-400' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Icon name="gitBranch" className="w-3.5 h-3.5 text-indigo-300" />
+                            <span>End-to-End Flow</span>
+                            {nextjsLinkedProject.isLinked && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            )}
                           </button>
 
                           <button
@@ -1716,6 +2017,218 @@ fieldCreationLines + '\n\n' +
                       </div>
                     )}
 
+                    {/* SUB-VIEW D: END-TO-END NEXT.JS FLOW & SCHEMA INSPECTOR */}
+                    {componentDetailViewMode === 'flow' && (() => {
+                      const flow = analyzeEndToEndFlow(activeComponent);
+                      return (
+                        <div className="space-y-6">
+                          {/* Top Status & File Banner */}
+                          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3.5">
+                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
+                                flow.isLiveFile ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/10' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                              }`}>
+                                <Icon name="fileCode" className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-white text-sm font-mono">{activeComponent.name}.tsx</span>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                    flow.isLiveFile ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-300'
+                                  }`}>
+                                    {flow.isLiveFile ? 'Live Local Project File' : 'Generated Spec Blueprint'}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-2">
+                                  <span>Path: {flow.filePath}</span>
+                                  {flow.isLiveFile && (
+                                    <span className="text-emerald-400 text-[11px] font-bold">● Synchronized</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <button
+                                onClick={() => setNextjsLinkModalOpen(true)}
+                                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                              >
+                                <Icon name="folder" className="w-3.5 h-3.5 text-indigo-400" />
+                                <span>{nextjsLinkedProject.isLinked ? 'Switch Folder' : 'Link Next.js Folder'}</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => copyToClipboard(flow.codeText, 'Next.js Component')}
+                                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30"
+                              >
+                                <Icon name="copy" className="w-3.5 h-3.5" />
+                                <span>Copy Code</span>
+                              </button>
+
+                              <button
+                                onClick={() => downloadFile(`${activeComponent.name}.tsx`, flow.codeText)}
+                                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                              >
+                                <Icon name="download" className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Download</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 3-Tier End-to-End Architecture Flow Visualizer */}
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                              <Icon name="gitBranch" className="w-4 h-4 text-indigo-400" />
+                              <span>3-Tier End-to-End Architecture Flow</span>
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                              {/* Step 1: Sitecore CM Backend */}
+                              <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-2.5">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                  <span className="font-bold text-white flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                                    <span>Sitecore CM Schema</span>
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/30">Backend</span>
+                                </div>
+                                <div className="space-y-1.5 text-slate-300">
+                                  <div><strong>Template:</strong> <span className="font-mono text-indigo-200">{activeComponent.name}</span></div>
+                                  <div><strong>Category:</strong> <span className="text-slate-400">{activeComponent.category}</span></div>
+                                  <div><strong>Datasource Query:</strong> <span className="font-mono text-[11px] text-slate-400 block truncate">{activeComponent.datasourceTemplate?.defaultLocationQuery || './_Data/' + activeComponent.name + 's'}</span></div>
+                                  <div className="pt-1 text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
+                                    <Icon name="check" className="w-3.5 h-3.5" />
+                                    <span>{activeComponent.fields.length} Data Fields Provisioned</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Step 2: Layout Service / GraphQL */}
+                              <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-2.5">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                  <span className="font-bold text-white flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                                    <span>Layout Service JSON</span>
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">JSS / Edge</span>
+                                </div>
+                                <div className="space-y-1.5 text-slate-300 font-mono text-[11px]">
+                                  <div className="p-2.5 bg-slate-950 rounded-xl text-slate-300 overflow-x-auto border border-slate-800/80 leading-relaxed">
+                                    <span className="text-cyan-300">componentName:</span> <span className="text-emerald-300">"{activeComponent.name}"</span>,<br/>
+                                    <span className="text-cyan-300">fields:</span> &#123;<br/>
+                                    {activeComponent.fields.slice(0, 3).map((f, i) => (
+                                      <span key={i} className="pl-3 block text-indigo-200">
+                                        {f.name.charAt(0).toLowerCase() + f.name.slice(1)}: &#123; value: ... &#125;,
+                                      </span>
+                                    ))}
+                                    {activeComponent.fields.length > 3 && <span className="pl-3 text-slate-500">... +{activeComponent.fields.length - 3} more</span>}
+                                    &#125;
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Step 3: Next.js Front-End */}
+                              <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-2.5">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                                  <span className="font-bold text-white flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                    <span>Next.js React View</span>
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">Front-End</span>
+                                </div>
+                                <div className="space-y-1.5 text-slate-300">
+                                  <div><strong>Component:</strong> <span className="font-mono text-emerald-300">{activeComponent.name}.tsx</span></div>
+                                  <div><strong>Props Type:</strong> <span className="font-mono text-indigo-200">{activeComponent.name}Props</span></div>
+                                  <div><strong>Safety Wrap:</strong> <span className="font-mono text-slate-400 text-[11px]">withDatasourceCheck()</span></div>
+                                  <div className="pt-1 text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
+                                    <Icon name="checkCircle" className="w-3.5 h-3.5" />
+                                    <span>{flow.matchedCount} of {flow.totalCount} fields verified ({flow.matchPercentage}%)</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Field Matching & Verification Matrix */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                <Icon name="shieldCheck" className="w-4 h-4 text-emerald-400" />
+                                <span>Sitecore ⟷ Next.js Contract & Field Verification Matrix</span>
+                              </h3>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
+                                flow.matchedCount === flow.totalCount
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                              }`}>
+                                {flow.matchedCount} / {flow.totalCount} Fields Matched
+                              </span>
+                            </div>
+
+                            <div className="glass-card rounded-2xl overflow-hidden border border-slate-800 text-xs">
+                              <table className="w-full text-left">
+                                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 font-bold uppercase text-[11px]">
+                                  <tr>
+                                    <th className="p-3">Sitecore Field</th>
+                                    <th className="p-3">Sitecore Type</th>
+                                    <th className="p-3">Next.js TS Prop</th>
+                                    <th className="p-3">JSS Component Binding</th>
+                                    <th className="p-3">Verification Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/80">
+                                  {flow.fieldDiagnostics.map((fd, i) => (
+                                    <tr key={i} className="hover:bg-slate-900/40">
+                                      <td className="p-3 font-mono font-bold text-white flex items-center gap-1.5">
+                                        <span>{fd.name}</span>
+                                        {fd.required && <span className="text-[10px] text-rose-400 font-bold">*</span>}
+                                      </td>
+                                      <td className="p-3 text-indigo-300 font-mono">{fd.type}</td>
+                                      <td className="p-3 text-cyan-300 font-mono">fields.{fd.vName}</td>
+                                      <td className="p-3 text-slate-300 font-mono">
+                                        {fd.type === 'Image' ? '<Image field={...} />' :
+                                         fd.type === 'General Link' ? '<Link field={...} />' :
+                                         fd.type === 'Rich Text' ? '<RichText field={...} />' :
+                                         '<Text field={...} />'}
+                                      </td>
+                                      <td className="p-3">
+                                        {fd.status === 'matched' ? (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[11px] border border-emerald-500/30">
+                                            <Icon name="check" className="w-3 h-3" />
+                                            <span>Matched in TSX</span>
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold text-[11px] border border-amber-500/30">
+                                            <Icon name="alertTriangle" className="w-3 h-3" />
+                                            <span>Not in TSX</span>
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Live Source Code View */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                <Icon name="code" className="w-4 h-4 text-violet-400" />
+                                <span>Next.js TSX Source Code ({flow.filePath})</span>
+                              </h3>
+                              <span className="text-xs text-slate-400 font-mono">{flow.codeText.split('\n').length} lines</span>
+                            </div>
+
+                            <pre className="p-6 bg-slate-950 rounded-2xl border border-slate-800 text-xs font-mono text-indigo-200 overflow-x-auto max-h-[450px] leading-relaxed">
+                              {flow.codeText}
+                            </pre>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                   </div>
                 </div>
 
@@ -2107,8 +2620,8 @@ fieldCreationLines + '\n\n' +
                     <div className="flex items-center flex-wrap gap-2.5">
                       <button
                         onClick={() => {
-                          const md = generateMarkdownDocs(docsComponentsList, docAudience);
-                          copyToClipboard(md, 'Markdown Documentation');
+                          const md = generateMarkdownDocs(docsComponentsList, docAudience, nextjsLinkedProject.files);
+                          copyToClipboard(md, 'End-to-End Markdown Documentation');
                         }}
                         className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow"
                       >
@@ -2118,7 +2631,7 @@ fieldCreationLines + '\n\n' +
 
                       <button
                         onClick={() => {
-                          const md = generateMarkdownDocs(docsComponentsList, docAudience);
+                          const md = generateMarkdownDocs(docsComponentsList, docAudience, nextjsLinkedProject.files);
                           const fname = (docScope === 'single' ? docSelectedCompId : 'Sitecore_Components') + '_' + docAudience + '_Docs.md';
                           downloadFile(fname, md);
                         }}
@@ -2754,6 +3267,181 @@ fieldCreationLines + '\n\n' +
                     className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold"
                   >
                     Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* MODAL 3: NEXT.JS PROJECT LINKER MODAL */}
+          {/* ========================================================================= */}
+          {nextjsLinkModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+              <div className="glass-panel rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-800">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
+                      <Icon name="fileCode" className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white">Connect Next.js Front-End Project</h3>
+                      <p className="text-xs text-slate-400">Load local component source code to view end-to-end Sitecore ⟷ Next.js data flow.</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setNextjsLinkModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+                    <Icon name="x" className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  
+                  {/* Status Card */}
+                  {nextjsLinkedProject.isLinked ? (
+                    <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-emerald-300">
+                        <Icon name="checkCircle" className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <span className="font-bold block text-sm">Project Linked: {nextjsLinkedProject.folderName}</span>
+                          <span className="text-[11px] text-emerald-200/80 font-mono">
+                            {nextjsLinkedProject.filesCount} components indexed • Last scanned: {nextjsLinkedProject.lastScanned || 'Just now'}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const reset = { isLinked: false, folderName: '', filesCount: 0, files: {}, lastScanned: null };
+                          persistNextjsProject(reset);
+                          showToast('Disconnected Next.js project');
+                        }}
+                        className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white rounded-lg font-bold text-xs transition-all border border-rose-500/30"
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-indigo-950/30 border border-indigo-500/30 rounded-2xl text-indigo-200 text-xs flex items-center gap-3">
+                      <Icon name="sparkles" className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                      <span>Linking your Next.js directory allows the tool to read real <code>src/components/*.tsx</code> files and verify props matching against Sitecore templates.</span>
+                    </div>
+                  )}
+
+                  {/* Connect Methods */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {/* Method 1: Directory Picker API */}
+                    <button
+                      onClick={linkNextjsFolderViaApi}
+                      className="p-5 bg-gradient-to-br from-indigo-950/60 to-slate-900/90 hover:border-indigo-500 border border-slate-800 rounded-2xl text-left space-y-2 transition-all group"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <Icon name="folder" className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-white text-sm block">1-Click Pick Folder</span>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">Select your <code>src/components</code> directory using native browser access.</span>
+                      </div>
+                    </button>
+
+                    {/* Method 2: Folder Upload Fallback */}
+                    <label className="p-5 bg-gradient-to-br from-emerald-950/40 to-slate-900/90 hover:border-emerald-500 border border-slate-800 rounded-2xl text-left space-y-2 cursor-pointer transition-all group block">
+                      <input
+                        type="file"
+                        webkitdirectory=""
+                        directory=""
+                        multiple
+                        onChange={handleNextjsFolderUpload}
+                        className="hidden"
+                      />
+                      <div className="w-8 h-8 rounded-xl bg-emerald-600/30 text-emerald-300 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                        <Icon name="cloudDownload" className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-white text-sm block">Upload Components Folder</span>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">Upload all <code>.tsx</code> / <code>.jsx</code> files from your local components folder.</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Single file upload drop */}
+                  <div className="pt-2">
+                    <label className="p-4 border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl flex items-center justify-center gap-3 cursor-pointer bg-slate-950/50 transition-all text-center">
+                      <input
+                        type="file"
+                        accept=".tsx,.jsx,.ts"
+                        onChange={handleSingleFileDrop}
+                        className="hidden"
+                      />
+                      <Icon name="fileCode" className="w-4 h-4 text-indigo-400" />
+                      <span className="text-slate-300 text-xs">Or drag and drop a single <code>.tsx</code> component file here to import</span>
+                    </label>
+                  </div>
+
+                  {/* List of Loaded Component Files */}
+                  {nextjsLinkedProject.isLinked && Object.keys(nextjsLinkedProject.files || {}).length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                          Detected Front-End Components ({Object.keys(nextjsLinkedProject.files).length})
+                        </span>
+                        <input
+                          type="text"
+                          value={nextjsSearchFilter}
+                          onChange={(e) => setNextjsSearchFilter(e.target.value)}
+                          placeholder="Search files..."
+                          className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-white font-mono"
+                        />
+                      </div>
+
+                      <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+                        {Object.entries(nextjsLinkedProject.files)
+                          .filter(([name]) => name.toLowerCase().includes(nextjsSearchFilter.toLowerCase()))
+                          .map(([name, file]) => {
+                            const isSelected = name === activeComponent.name;
+                            return (
+                              <div
+                                key={name}
+                                onClick={() => {
+                                  // If a component with this name exists in catalog, select it
+                                  const matchingComp = componentSpecs.find(c => c.name.toLowerCase() === name.toLowerCase());
+                                  if (matchingComp) {
+                                    setSelectedComponentId(matchingComp.id);
+                                    setComponentDetailViewMode('flow');
+                                    setNextjsLinkModalOpen(false);
+                                  } else {
+                                    showToast(`Opened ${name}.tsx in End-to-End inspector`);
+                                    setComponentDetailViewMode('flow');
+                                    setNextjsLinkModalOpen(false);
+                                  }
+                                }}
+                                className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                                  isSelected
+                                    ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+                                    : 'bg-slate-900/70 border-slate-800 hover:border-slate-700 text-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <Icon name="fileCode" className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                                  <span className="font-bold text-white">{name}.tsx</span>
+                                  <span className="text-[10px] text-slate-500 truncate">{file.path}</span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 flex-shrink-0">
+                                  {file.content ? `${file.content.split('\n').length} lines` : ''}
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                  <button
+                    onClick={() => setNextjsLinkModalOpen(false)}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/30"
+                  >
+                    Done
                   </button>
                 </div>
               </div>
